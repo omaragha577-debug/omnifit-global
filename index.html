@@ -170,7 +170,7 @@
                 <label>Product Link (e.g. Affiliate Link)</label>
                 <input type="text" id="itemLink" placeholder="https://amazon.com/your-affiliate-link">
             </div>
-            <button class="btn-action" style="width:100%; border:none; cursor:pointer;" onclick="addNewItem()">Publish to Website</button>
+            <button class="btn-action" style="width:100%; border:none; cursor:pointer;" onclick="addNewItem()">Publish & Download Updated Site</button>
         </div>
     </div>
 
@@ -178,12 +178,17 @@
         let selectedImageBase64 = '';
         const SECURE_PASSWORD = "P@55w0rdomar577";
 
+        // GLOBAL PRODUCTS & ARTICLES STORAGE (Hardcoded into file so everyone worldwide sees them instantly)
+        let siteItems = [
+            // Example item format: { type: 'product', title: '...', category: '...', image: '...', desc: '...', link: '...' }
+        ];
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('admin') === 'true') {
                 document.getElementById('secretAdminBtn').style.display = 'block';
             }
-            loadSavedItems();
+            renderItems();
         };
 
         function openAdminModal() {
@@ -256,11 +261,11 @@
             }
 
             const newItem = { type, title, category, image, desc, link };
-            let savedItems = JSON.parse(localStorage.getItem('omnifit_items')) || [];
-            savedItems.unshift(newItem);
-            localStorage.setItem('omnifit_items', JSON.stringify(savedItems));
+            siteItems.unshift(newItem);
+            renderItems();
 
-            loadSavedItems();
+            // Generate updated HTML file automatically for user to upload to GitHub
+            generateUpdatedHtmlFile();
 
             closeAdminModal();
             document.getElementById('itemTitle').value = '';
@@ -269,14 +274,11 @@
             document.getElementById('itemImageFile').value = '';
             document.getElementById('fileNameDisplay').innerText = '';
             selectedImageBase64 = '';
-            alert('Successfully published!');
         }
 
-        function loadSavedItems() {
+        function renderItems() {
             const productGrid = document.getElementById('productGrid');
             const articleGrid = document.getElementById('articleGrid');
-            
-            let savedItems = JSON.parse(localStorage.getItem('omnifit_items')) || [];
 
             productGrid.innerHTML = '';
             articleGrid.innerHTML = '';
@@ -284,13 +286,13 @@
             let pCount = 0;
             let aCount = 0;
 
-            if(savedItems.length === 0) {
+            if(siteItems.length === 0) {
                 productGrid.innerHTML = `<div class="empty-notice" id="noProductsText">No products added yet. Access the secret panel to publish gear.</div>`;
                 articleGrid.innerHTML = `<div class="empty-notice" id="noArticlesText">No articles published yet. Access the secret panel to write guides.</div>`;
                 return;
             }
 
-            savedItems.forEach(item => {
+            siteItems.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'card';
 
@@ -326,6 +328,24 @@
             if(aCount === 0) {
                 articleGrid.innerHTML = `<div class="empty-notice" id="noArticlesText">No articles published yet. Access the secret panel to write guides.</div>`;
             }
+        }
+
+        function generateUpdatedHtmlFile() {
+            let fullHtml = document.documentElement.outerHTML;
+            // Inject current siteItems array back into the script
+            fullHtml = fullHtml.replace(/let siteItems = \[([\s\S]*?)\];/, 'let siteItems = ' + JSON.stringify(siteItems, null, 4) + ';');
+            
+            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('Product published locally and updated index.html file downloaded! Upload this new index.html to GitHub and everyone worldwide will instantly see your product.');
         }
     </script>
 </body>
