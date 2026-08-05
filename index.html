@@ -178,10 +178,8 @@
         let selectedImageBase64 = '';
         const SECURE_PASSWORD = "P@55w0rdomar577";
 
-        // GLOBAL PRODUCTS & ARTICLES STORAGE (Hardcoded into file so everyone worldwide sees them instantly)
-        let siteItems = [
-            // Example item format: { type: 'product', title: '...', category: '...', image: '...', desc: '...', link: '...' }
-        ];
+        // PRODUCTS & ARTICLES STORAGE (BURAYA EKLEDİĞİN ÜRÜNLER KABFEDİLİR)
+        let siteItems = [];
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -263,8 +261,6 @@
             const newItem = { type, title, category, image, desc, link };
             siteItems.unshift(newItem);
             renderItems();
-
-            // Generate updated HTML file automatically for user to upload to GitHub
             generateUpdatedHtmlFile();
 
             closeAdminModal();
@@ -331,9 +327,17 @@
         }
 
         function generateUpdatedHtmlFile() {
-            let fullHtml = document.documentElement.outerHTML;
-            // Inject current siteItems array back into the script
-            fullHtml = fullHtml.replace(/let siteItems = \[([\s\S]*?)\];/, 'let siteItems = ' + JSON.stringify(siteItems, null, 4) + ';');
+            let cloneDoc = document.documentElement.cloneNode(true);
+            
+            // Script içindeki siteItems dizisini güncel haliyle mühürlüyoruz
+            let scripts = cloneDoc.getElementsByTagName('script');
+            for(let s of scripts) {
+                if(s.textContent.includes('let siteItems =')) {
+                    s.textContent = s.textContent.replace(/let siteItems = \[[\s\S]*?\];/, 'let siteItems = ' + JSON.stringify(siteItems, null, 4) + ';');
+                }
+            }
+
+            let fullHtml = "<!DOCTYPE html>\n" + cloneDoc.outerHTML;
             
             const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -345,7 +349,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            alert('Product published locally and updated index.html file downloaded! Upload this new index.html to GitHub and everyone worldwide will instantly see your product.');
+            alert('Ürün eklendi ve güncel "index.html" dosyası bilgisayarına indirildi! Bu dosyayı GitHub depona yüklediğin an her şey kalıcı olacak.');
         }
     </script>
 </body>
